@@ -5,3 +5,61 @@
 
 
 // SETCURRENTDIR("Media") // go to media files
+
+TYPE level_TYPE
+	mapSizeX
+	mapSizeY
+ENDTYPE
+
+TYPE map_TYPE
+
+ENDTYPE
+
+GLOBAL level AS level_TYPE, map[] AS map_TYPE
+
+main()
+
+FUNCTION main:
+
+	level.mapSizeX = 32
+	level.mapSizeY = 16
+
+	WHILE TRUE
+		drawUpdate()
+		SHOWSCREEN
+	WEND
+
+ENDFUNCTION
+
+FUNCTION init:
+	
+ENDFUNCTION
+
+FUNCTION loader:
+
+ENDFUNCTION
+
+FUNCTION drawUpdate:
+
+	drawMap()
+	drawPlayer()
+
+ENDFUNCTION
+
+FUNCTION drawPlayer:
+
+	DRAWRECT 496, 368, 32, 32, RGB(128, 0, 255)
+
+ENDFUNCTION
+
+FUNCTION drawMap:
+LOCAL tmpX, tmpY
+
+	FOR tmpY = 0 TO level.mapSizeY - 1	
+		FOR tmpX = 0 TO level.mapSizeX - 1
+			DRAWRECT 0 + (tmpX * 32), 0 + (tmpY * 32), 32, 32, RGB(255, 0, 0)
+			DRAWRECT 1 + (tmpX * 32), 1 + (tmpY * 32), 30, 30, RGB(255, 255, 255)
+		NEXT
+	NEXT
+
+ENDFUNCTION
