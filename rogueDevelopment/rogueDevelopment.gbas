@@ -26,9 +26,13 @@ TYPE map_TYPE
 
 ENDTYPE
 
+TYPE sprite_TYPE
+	id
+ENDTYPE
+
 TYPE player_TYPE
 	position AS position_TYPE
-	
+	direction
 	runningSpeed
 ENDTYPE
 
@@ -46,7 +50,7 @@ FUNCTION main:
 	init()
 	level.mapSizeX = 32
 	level.mapSizeY = 16
-
+	LOADSPRITE "media/turm.png", 0
 	checkMap()
 
 
@@ -83,7 +87,21 @@ ENDFUNCTION
 
 FUNCTION drawPlayer:
 
+	SELECT player.direction
+	CASE 1
+	
+	CASE 2
+	
+	CASE 3
+	
+	CASE 4
+	
+	DEFAULT
+	
+	ENDSELECT
+	
 	DRAWRECT 496, 368, 32, 32, RGB(128, 0, 255)
+	
 	
 	drawShotDirection()
 	checkPositionPlayer()
@@ -101,6 +119,7 @@ LOCAL phi, x, y, posX, posY
 	posY = SIN(phi) * 50
 	
 	DRAWLINE 512, 384, 512 + posX, 384 + posY, RGB(0, 255, 0)
+	ROTOSPRITE 0, 512 - 16, 384 - 16, phi * -1 - 90
 
 ENDFUNCTION
 
@@ -122,21 +141,25 @@ FUNCTION getInput:
 
 	// Rauf
 	IF KEY(17) = 1
+		player.direction = 1
 		INC player.position.y, player.runningSpeed * GETTIMER() * 0.1
 	ENDIF
 	
 	// Runter
 	IF KEY(31) = 1
+		player.direction = 2
 		DEC player.position.y, player.runningSpeed * GETTIMER() * 0.1
 	ENDIF
 	
 	// Links
 	IF KEY(30) = 1
+		player.direction = 3
 		INC player.position.x, player.runningSpeed * GETTIMER() * 0.1
 	ENDIF
 	
 	// Rechts
 	IF KEY(32) = 1
+		player.direction = 4
 		DEC player.position.x, player.runningSpeed * GETTIMER() * 0.1
 	ENDIF
 
