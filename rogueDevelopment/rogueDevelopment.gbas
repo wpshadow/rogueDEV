@@ -51,6 +51,7 @@ FUNCTION main:
 	level.mapSizeX = 32
 	level.mapSizeY = 16
 	LOADSPRITE "media/turm.png", 0
+	LOADSPRITE "media/panzer.png", 1
 	checkMap()
 
 
@@ -89,18 +90,26 @@ FUNCTION drawPlayer:
 
 	SELECT player.direction
 	CASE 1
-	
+		ROTOSPRITE 1, 496, 368, 0
 	CASE 2
-	
+		ROTOSPRITE 1, 496, 368, 180
 	CASE 3
-	
+		ROTOSPRITE 1, 496, 368, 90
 	CASE 4
-	
+		ROTOSPRITE 1, 496, 368, 270
+	CASE 5
+		ROTOSPRITE 1, 496, 368, 45
+	CASE 6
+		ROTOSPRITE 1, 496, 368, 315
+	CASE 7
+		ROTOSPRITE 1, 496, 368, 135
+	CASE 8
+		ROTOSPRITE 1, 496, 368, 225
 	DEFAULT
-	
+		ROTOSPRITE 1, 496, 368, 0
 	ENDSELECT
 	
-	DRAWRECT 496, 368, 32, 32, RGB(128, 0, 255)
+	//DRAWRECT 496, 368, 32, 32, RGB(128, 0, 255)
 	
 	
 	drawShotDirection()
@@ -138,31 +147,62 @@ LOCAL tmpX, tmpY
 ENDFUNCTION
 
 FUNCTION getInput:
+LOCAL counter
 
-	// Rauf
-	IF KEY(17) = 1
-		player.direction = 1
-		INC player.position.y, player.runningSpeed * GETTIMER() * 0.1
-	ENDIF
 	
-	// Runter
-	IF KEY(31) = 1
-		player.direction = 2
-		DEC player.position.y, player.runningSpeed * GETTIMER() * 0.1
-	ENDIF
+		// Rauf
+		IF KEY(17) = 1 AND KEY(30) = 0 AND KEY(32) = 0 OR KEY(17) = 1 AND KEY(30) = 1 AND KEY(32) = 1
+			player.direction = 1
+			INC player.position.y, player.runningSpeed * GETTIMER() * 0.1
+		ENDIF
+		
+		// Runter
+		IF KEY(31) = 1 AND KEY(30) = 0 AND KEY(32) = 0 OR KEY(31) = 1 AND KEY(30) = 1 AND KEY(32) = 1
+			player.direction = 2
+			DEC player.position.y, player.runningSpeed * GETTIMER() * 0.1
+		ENDIF
 	
-	// Links
-	IF KEY(30) = 1
-		player.direction = 3
-		INC player.position.x, player.runningSpeed * GETTIMER() * 0.1
-	ENDIF
-	
-	// Rechts
-	IF KEY(32) = 1
-		player.direction = 4
-		DEC player.position.x, player.runningSpeed * GETTIMER() * 0.1
-	ENDIF
+		// Links
+		IF KEY(30) = 1 AND KEY(17) = 0 AND KEY(31) = 0 
+			player.direction = 3
+			INC player.position.x, player.runningSpeed * GETTIMER() * 0.1
+		ENDIF
+		
+		// Rechts
+		IF KEY(32) = 1 AND KEY(17) = 0 AND KEY(31) = 0 OR KEY(32) = 1 AND KEY(17) = 1 AND KEY(31) = 1
+			player.direction = 4
+			DEC player.position.x, player.runningSpeed * GETTIMER() * 0.1
+		ENDIF
 
+		// Rauf/Links
+		IF KEY(17) = 1 AND KEY(30) = 1 AND KEY(32) = 0
+			player.direction = 5
+			INC player.position.x, player.runningSpeed * GETTIMER() * 0.1
+			INC player.position.y, player.runningSpeed * GETTIMER() * 0.1
+		ENDIF
+	
+		// Rauf/Rechts
+		IF KEY(17) = 1 AND KEY(32) = 1 AND KEY(30) = 0
+			player.direction = 6
+			DEC player.position.x, player.runningSpeed * GETTIMER() * 0.1
+			INC player.position.y, player.runningSpeed * GETTIMER() * 0.1
+		ENDIF
+	
+		// Runter/Links
+		IF KEY(31) = 1 AND KEY(30) = 1 AND KEY(32) = 0
+			player.direction = 7
+			INC player.position.x, player.runningSpeed * GETTIMER() * 0.1
+			DEC player.position.y, player.runningSpeed * GETTIMER() * 0.1
+		ENDIF
+	
+		// Runter/Rechts
+		IF KEY(31) = 1 AND KEY(32) = 1 AND KEY(30) = 0
+			player.direction = 8
+			DEC player.position.x, player.runningSpeed * GETTIMER() * 0.1
+			DEC player.position.y, player.runningSpeed * GETTIMER() * 0.1
+		ENDIF
+	
+	
 ENDFUNCTION
 
 FUNCTION system_mouse:
