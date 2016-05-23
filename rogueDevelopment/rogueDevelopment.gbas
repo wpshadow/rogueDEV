@@ -18,6 +18,8 @@ ENDTYPE
 TYPE level_TYPE
 	mapSizeX
 	mapSizeY
+	offsetX
+	offsetY
 ENDTYPE
 
 TYPE map_TYPE
@@ -42,16 +44,22 @@ main()
 FUNCTION main:
 
 	init()
-
 	level.mapSizeX = 32
 	level.mapSizeY = 16
+
+	checkMap()
+
+
 	
-	player.runningSpeed = 1
+	player.runningSpeed = 2
 
 	WHILE TRUE
 		system_mouse()
 		getInput()
 		drawUpdate()
+		
+		PRINT  player.position.x + " " + player.position.y, 0, 0
+		
 		SHOWSCREEN
 	WEND
 
@@ -78,6 +86,7 @@ FUNCTION drawPlayer:
 	DRAWRECT 496, 368, 32, 32, RGB(128, 0, 255)
 	
 	drawShotDirection()
+	checkPositionPlayer()
 
 ENDFUNCTION
 
@@ -102,8 +111,8 @@ LOCAL tmpX, tmpY
 
 	FOR tmpY = 0 TO level.mapSizeY - 1
 		FOR tmpX = 0 TO level.mapSizeX - 1
-			DRAWRECT 0 + (tmpX * 32) + player.position.x, 0 + (tmpY * 32) + player.position.y, 32, 32, RGB(255, 0, 0)
-			DRAWRECT 1 + (tmpX * 32) + player.position.x, 1 + (tmpY * 32) + player.position.y, 30, 30, RGB(255, 255, 255)
+			DRAWRECT level.offsetX + (tmpX * 32) + player.position.x, level.offsetY + (tmpY * 32) + player.position.y, 32, 32, RGB(255, 0, 0)
+			DRAWRECT level.offsetX + 1 + (tmpX * 32) + player.position.x, level.offsetY + 1 + (tmpY * 32) + player.position.y, 30, 30, RGB(128, 64, 32)
 		NEXT
 	NEXT
 
@@ -172,5 +181,32 @@ STATIC b1_tmp, b2_tmp, press_init, press_timer_old
 	mouse.b2 = b2
 	mouse.b1_press = b1_press
 	mouse.b2_press = b2_press
+
+ENDFUNCTION
+
+FUNCTION checkPositionPlayer:
+
+	IF player.position.y < ((level.mapSizeY / 2) * 32) * -1 + 16
+		player.position.y = ((level.mapSizeY / 2) * 32) * -1 + 16
+	ENDIF
+
+	IF player.position.y > ((level.mapSizeY / 2) * 32) - 16
+		player.position.y = ((level.mapSizeY / 2) * 32) - 16
+	ENDIF
+
+	IF player.position.x < ((level.mapSizeX / 2) * 32) * -1 + 16
+		player.position.x = ((level.mapSizeX / 2) * 32) * -1 + 16
+	ENDIF
+
+	IF player.position.x > ((level.mapSizeX / 2) * 32) - 16
+		player.position.x = ((level.mapSizeX / 2) * 32) - 16
+	ENDIF
+
+ENDFUNCTION
+
+FUNCTION checkMap:
+
+	level.offsetX = 512 - ((level.mapSizeX / 2) * 32)
+	level.offsetY = 384 - ((level.mapSizeY / 2) * 32)
 
 ENDFUNCTION
