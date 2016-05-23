@@ -34,6 +34,7 @@ TYPE player_TYPE
 	position AS position_TYPE
 	direction
 	runningSpeed
+	shotLaunchSpeed
 ENDTYPE
 
 TYPE position_TYPE
@@ -41,30 +42,49 @@ TYPE position_TYPE
 	y
 ENDTYPE
 
-GLOBAL level AS level_TYPE, map[] AS map_TYPE, player AS player_TYPE, mouse AS mouse_TYPE
+TYPE shot_TYPE
+	position AS position_TYPE
+	phi
+	movementSpeed
+	lifetime
+	typ
+	damage
+ENDTYPE
+
+TYPE topElements_TYPE
+	typ
+	position AS position_TYPE
+ENDTYPE
+
+GLOBAL level AS level_TYPE, map[] AS map_TYPE, player AS player_TYPE, mouse AS mouse_TYPE, shot[] AS shot_TYPE, topElements[] AS topElements_TYPE
 
 main()
 
 FUNCTION main:
 
 	init()
-	level.mapSizeX = 32
-	level.mapSizeY = 16
+	level.mapSizeX = 64
+	level.mapSizeY = 64
 	LOADSPRITE "media/turm.png", 0
 	LOADSPRITE "media/panzer.png", 1
+	LOADSPRITE "media/shot_0.png", 2
+	LOADSPRITE "media/ground_0.png", 3
+	LOADSPRITE "media/tree_0.png", 4
 	checkMap()
 
 
-	
+
 	player.runningSpeed = 2
+	player.shotLaunchSpeed = 0.3
+	
+	createTopElement(0, 10, 10)
 
 	WHILE TRUE
 		system_mouse()
 		getInput()
 		drawUpdate()
-		
-		PRINT  player.position.x + " " + player.position.y, 0, 0
-		
+		updateShot()
+
 		SHOWSCREEN
 	WEND
 
@@ -108,66 +128,116 @@ FUNCTION drawPlayer:
 	DEFAULT
 		ROTOSPRITE 1, 496, 368, 0
 	ENDSELECT
-	
+
 	//DRAWRECT 496, 368, 32, 32, RGB(128, 0, 255)
-	
-	
+
+
 	drawShotDirection()
 	checkPositionPlayer()
 
 ENDFUNCTION
 
 FUNCTION drawShotDirection:
-LOCAL phi, x, y, posX, posY
+LOCAL phi, x, y, posX, posY, posX2, posY2, s AS shot_TYPE
+STATIC shotTimerOld
 
 	x = mouse.x - 512
 	y = mouse.y - 384
 	phi = ATAN (y, x)
-	
+
 	posX = COS(phi) * 50
 	posY = SIN(phi) * 50
-	
-	DRAWLINE 512, 384, 512 + posX, 384 + posY, RGB(0, 255, 0)
+
+	posX2 = COS(phi) * 25
+	posY2 = SIN(phi) * 25
+
+	DRAWLINE 512 + posX2, 384 + posY2, 512 + posX, 384 + posY, RGB(0, 255, 0)
 	ROTOSPRITE 0, 512 - 16, 384 - 16, phi * -1 - 90
+	
+	IF shotTimerOld <= GETTIMERALL() 
+		IF mouse.b1_press = 1
+			s.position.x = 512 - player.position.x
+			s.position.y = 384 - player.position.y
+			s.phi = phi
+			s.movementSpeed = 10
+			s.lifetime = GETTIMERALL() + 5000
+			DIMPUSH shot[], s
+			
+			shotTimerOld = GETTIMERALL() + player.shotLaunchSpeed * 1000
+		ENDIF
+	ENDIF
 
 ENDFUNCTION
 
 FUNCTION drawMap:
+
+	drawGround()
+	drawTop()
+
+ENDFUNCTION
+
+FUNCTION drawGround:
 LOCAL tmpX, tmpY
-
-
 
 	FOR tmpY = 0 TO level.mapSizeY - 1
 		FOR tmpX = 0 TO level.mapSizeX - 1
-			DRAWRECT level.offsetX + (tmpX * 32) + player.position.x, level.offsetY + (tmpY * 32) + player.position.y, 32, 32, RGB(255, 0, 0)
-			DRAWRECT level.offsetX + 1 + (tmpX * 32) + player.position.x, level.offsetY + 1 + (tmpY * 32) + player.position.y, 30, 30, RGB(128, 64, 32)
+			//DRAWRECT level.offsetX + (tmpX * 32) + player.position.x, level.offsetY + (tmpY * 32) + player.position.y, 32, 32, RGB(255, 0, 0)
+			//DRAWRECT level.offsetX + 1 + (tmpX * 32) + player.position.x, level.offsetY + 1 + (tmpY * 32) + player.position.y, 30, 30, RGB(128, 64, 32)
+			DRAWSPRITE 3, level.offsetX + (tmpX * 32) + player.position.x, level.offsetY + (tmpY * 32) + player.position.y
 		NEXT
 	NEXT
 
 ENDFUNCTION
 
+FUNCTION createTopElement: typ, posX, posY
+LOCAL t AS topElements_TYPE
+	
+	t.typ = typ
+	t.position.x = posX
+	t.position.y = posY
+	
+	DIMPUSH topElements[], t
+
+ENDFUNCTION
+
+FUNCTION drawTop:
+	
+	IF LEN(topElements[]) > 0
+		FOREACH t IN topElements[]
+			DRAWSPRITE 4, t.position.x * 32 + player.position.x, t.position.y * 32 + player.position.y
+		NEXT
+	ENDIF	
+
+ENDFUNCTION
+
 FUNCTION getInput:
+
+	playerMovement()
+
+ENDFUNCTION
+
+FUNCTION playerMovement:
 LOCAL counter
 
-	
+
 		// Rauf
 		IF KEY(17) = 1 AND KEY(30) = 0 AND KEY(32) = 0 OR KEY(17) = 1 AND KEY(30) = 1 AND KEY(32) = 1
 			player.direction = 1
 			INC player.position.y, player.runningSpeed * GETTIMER() * 0.1
 		ENDIF
-		
+
 		// Runter
 		IF KEY(31) = 1 AND KEY(30) = 0 AND KEY(32) = 0 OR KEY(31) = 1 AND KEY(30) = 1 AND KEY(32) = 1
 			player.direction = 2
 			DEC player.position.y, player.runningSpeed * GETTIMER() * 0.1
 		ENDIF
-	
+
 		// Links
-		IF KEY(30) = 1 AND KEY(17) = 0 AND KEY(31) = 0 
+		IF KEY(30) = 1 AND KEY(17) = 0 AND KEY(31) = 0
 			player.direction = 3
 			INC player.position.x, player.runningSpeed * GETTIMER() * 0.1
 		ENDIF
-		
+
 		// Rechts
 		IF KEY(32) = 1 AND KEY(17) = 0 AND KEY(31) = 0 OR KEY(32) = 1 AND KEY(17) = 1 AND KEY(31) = 1
 			player.direction = 4
@@ -180,29 +250,28 @@ LOCAL counter
 			INC player.position.x, player.runningSpeed * GETTIMER() * 0.1
 			INC player.position.y, player.runningSpeed * GETTIMER() * 0.1
 		ENDIF
-	
+
 		// Rauf/Rechts
 		IF KEY(17) = 1 AND KEY(32) = 1 AND KEY(30) = 0
 			player.direction = 6
 			DEC player.position.x, player.runningSpeed * GETTIMER() * 0.1
 			INC player.position.y, player.runningSpeed * GETTIMER() * 0.1
 		ENDIF
-	
+
 		// Runter/Links
 		IF KEY(31) = 1 AND KEY(30) = 1 AND KEY(32) = 0
 			player.direction = 7
 			INC player.position.x, player.runningSpeed * GETTIMER() * 0.1
 			DEC player.position.y, player.runningSpeed * GETTIMER() * 0.1
 		ENDIF
-	
+
 		// Runter/Rechts
 		IF KEY(31) = 1 AND KEY(32) = 1 AND KEY(30) = 0
 			player.direction = 8
 			DEC player.position.x, player.runningSpeed * GETTIMER() * 0.1
 			DEC player.position.y, player.runningSpeed * GETTIMER() * 0.1
 		ENDIF
-	
-	
+
 ENDFUNCTION
 
 FUNCTION system_mouse:
@@ -271,5 +340,24 @@ FUNCTION checkMap:
 
 	level.offsetX = 512 - ((level.mapSizeX / 2) * 32)
 	level.offsetY = 384 - ((level.mapSizeY / 2) * 32)
+
+ENDFUNCTION
+
+FUNCTION updateShot:
+
+	IF LEN(shot[]) > 0	
+		FOREACH s IN shot[]
+			
+			INC s.position.x, COS(s.phi) * s.movementSpeed
+			INC s.position.y, SIN(s.phi) * s.movementSpeed
+			
+			DRAWSPRITE 2, s.position.x + player.position.x, s.position.y  + player.position.y
+			
+			IF s.lifetime <= GETTIMERALL()
+				DELETE s
+			ENDIF
+			
+		NEXT
+	ENDIF
 
 ENDFUNCTION
