@@ -76,14 +76,18 @@ FUNCTION main:
 
 	player.runningSpeed = 2
 	player.shotLaunchSpeed = 0.3
-	
+
 	createTopElement(0, 10, 10)
 
 	WHILE TRUE
+		
+	
 		system_mouse()
 		getInput()
 		drawUpdate()
 		updateShot()
+
+		PRINT player.position.x + " " + player.position.y, 0, 0
 
 		SHOWSCREEN
 	WEND
@@ -153,8 +157,8 @@ STATIC shotTimerOld
 
 	DRAWLINE 512 + posX2, 384 + posY2, 512 + posX, 384 + posY, RGB(0, 255, 0)
 	ROTOSPRITE 0, 512 - 16, 384 - 16, phi * -1 - 90
-	
-	IF shotTimerOld <= GETTIMERALL() 
+
+	IF shotTimerOld <= GETTIMERALL()
 		IF mouse.b1_press = 1
 			s.position.x = 512 - player.position.x
 			s.position.y = 384 - player.position.y
@@ -162,7 +166,7 @@ STATIC shotTimerOld
 			s.movementSpeed = 10
 			s.lifetime = GETTIMERALL() + 5000
 			DIMPUSH shot[], s
-			
+
 			shotTimerOld = GETTIMERALL() + player.shotLaunchSpeed * 1000
 		ENDIF
 	ENDIF
@@ -191,22 +195,42 @@ ENDFUNCTION
 
 FUNCTION createTopElement: typ, posX, posY
 LOCAL t AS topElements_TYPE
-	
+
 	t.typ = typ
 	t.position.x = posX
 	t.position.y = posY
-	
+
 	DIMPUSH topElements[], t
 
 ENDFUNCTION
 
 FUNCTION drawTop:
-	
+LOCAL hit
+
 	IF LEN(topElements[]) > 0
 		FOREACH t IN topElements[]
 			DRAWSPRITE 4, t.position.x * 32 + player.position.x, t.position.y * 32 + player.position.y
+
+			hit = SPRCOLL(4, t.position.x * 32 + player.position.x, t.position.y * 32 + player.position.y, 1, 496, 368)
+
+DEBUG t.position.x * 32 + player.position.x + "\n"
+
+			IF hit = TRUE
+				
+				
+				
+				IF t.position.y * 32 + player.position.y < 352
+					player.position.y = player.position.y - player.runningSpeed * GETTIMER() * 0.1
+				ENDIF
+
+				IF t.position.y * 32 + player.position.y > 368
+					player.position.y = player.position.y + player.runningSpeed * GETTIMER() * 0.1
+				ENDIF
+					
+			ENDIF
+
 		NEXT
-	ENDIF	
+	ENDIF
 
 ENDFUNCTION
 
@@ -345,18 +369,18 @@ ENDFUNCTION
 
 FUNCTION updateShot:
 
-	IF LEN(shot[]) > 0	
+	IF LEN(shot[]) > 0
 		FOREACH s IN shot[]
-			
+
 			INC s.position.x, COS(s.phi) * s.movementSpeed
 			INC s.position.y, SIN(s.phi) * s.movementSpeed
-			
+
 			DRAWSPRITE 2, s.position.x + player.position.x, s.position.y  + player.position.y
-			
+
 			IF s.lifetime <= GETTIMERALL()
 				DELETE s
 			ENDIF
-			
+
 		NEXT
 	ENDIF
 
